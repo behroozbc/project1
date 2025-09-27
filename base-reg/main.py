@@ -61,3 +61,4 @@ Y_RSI=np.array(Y_RSI)
 
 runModels(X,Y_RSI,"RSI")
 runModels(X,Y_VHI,"VHI")
+# result https://t.me/c/1658424107/94/1575
