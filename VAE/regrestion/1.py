@@ -164,7 +164,7 @@ dataset= RegDataLoader(rootDir="E:/Work/University/PR/datas/voice-icar-federico-
 trainset, valset = torch.utils.data.random_split(dataset, [int(len(dataset) * 0.8), len(dataset) - int(len(dataset) * 0.8)])
 trainloader = DataLoader(trainset, batch_size=32, shuffle=True)
 valloader = DataLoader(valset, batch_size=32, shuffle=False)
-epochNumber=30
+epochNumber=40
 for epoch in range(epochNumber):
     loss_training = []
     vae.train()
@@ -180,17 +180,27 @@ for epoch in range(epochNumber):
                 epoch, np.mean(loss_training)))
     vae.eval()
     testLoss=[]  
+    val_rsis = []
+    val_vhis = []
+    val_latents=[]
     with torch.no_grad():
-        for batch,[spec,_,_] in enumerate(valloader):
+        for batch,[spec,rsi,vhi] in enumerate(valloader):
             spec=spec.cuda()
             recon_x, mean, logvar = vae(spec)
+            val_latents.append(mean.cpu().numpy())
             loss= VaeLoss(recon_x,spec,mean,logvar)
             testLoss.append(loss.item())
+            val_rsis.append(rsi.numpy())
+            val_vhis.append(vhi.numpy())
             if batch==0:
                 plotit(spec[0],epoch,"Real",writer)
                 plotit(recon_x[0],epoch,"Perdict",writer)
     writer.add_scalar("Test Loss",np.mean(testLoss),epoch)
     writer.add_scalar("Training Loss",np.mean(loss_training),epoch)
+    val_vhis=np.concatenate(val_vhis,axis=0)
+    val_rsis=np.concatenate(val_rsis,axis=0)
+    val_latents = np.concatenate(val_latents, axis=0)
+    claculateSVCRegrestin(val_latents,val_rsis,epoch,writer,'VAL',"RSI")
 writer.close()
 # 2. regertion
 # 4 save the model
